@@ -8,14 +8,23 @@ class SmsrouterController < ApplicationController
       @client = Twilio::REST::Client.new ENV['twilio_id'], ENV['twilio_token'] 
       from_number = params[:From]
       sms_in_body = params[:Body]
-      puts sms_in_body
-      puts routesms sms_in_body
+      #puts sms_in_body
+      type = routesms(sms_in_body)[:type]
+      puts type
       
+      if type == "direction"
+        msgBack = sms_in_body
+      elsif type == "weather"
+        msgBack = weatherMsg(routesms(sms_in_body)[:q])
+      elsif type == "error"
+        msgBack = routesms(sms_in_body)[:helpMsg]
+      else
+      end
       
       @client.account.sms.messages.create(
         :from => "+13158951310",
         :to => from_number,
-        :body => sms_in_body
+        :body => msgBack
       )
     end
   end
@@ -71,7 +80,6 @@ class SmsrouterController < ApplicationController
                               "q" 	=> weather_query}
                   end
                   
-          
           #system didn't find a corresponding command
           else  
                   helpMsg = "Please use the following format to get help: direction from city1/street_addr1 to city2/street_addr2, weather of 94115, or weather at san francisco"
@@ -80,5 +88,23 @@ class SmsrouterController < ApplicationController
                     "helpMsg" => helpMsg
                   }
           end
-  end  
+  end  #routesms(sms_in)
+  
+  def google_direction(origin,destiny)
+    
+  end
+  
+  def weatherMsg(q)
+    weather_url = "http://free.worldweatheronline.com/feed/weather.ashx"
+    query = "&format=json&num_of_days=2&key=" + ENV['weather_token']
+    api_call_url = weather_url + "?q=" + q + query
+    response = Typhoeus::Request.get api_call_url
+    puts response.inspect
+    
+    temp_c = response[:data][:current_condition][:temm_C]
+    temp_f = response[:data][:current_condition][:temm_F]
+    
+    "current temperature is: " + temp_c + "C/" + temp_f + "F"
+    
+  end
 end
