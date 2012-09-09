@@ -1,6 +1,6 @@
 class SmsrouterController < ApplicationController
   def index
-    puts ENV.inspect
+    
   end
 
   def api
@@ -8,7 +8,9 @@ class SmsrouterController < ApplicationController
       @client = Twilio::REST::Client.new ENV['twilio_id'], ENV['twilio_token'] 
       from_number = params[:From]
       sms_in_body = params[:Body]
-      puts routesms(sms_in_body).inspect
+      puts sms_in_body
+      puts routesms sms_in_body
+      
       
       @client.account.sms.messages.create(
         :from => "+13158951310",
@@ -25,13 +27,13 @@ class SmsrouterController < ApplicationController
 
           #split the sms string into array
           base_arr = sms_in.split(" ")
-          
+          command_in = base_arr[0].downcase
           #this is to detect if the command sent by the user is recognizable by system
-          if command_list.include?(base_arr[0])
+          if command_list.include?(command_in)
                   #puts base_arr[0] + " service found\n"
                   
                   #recognize and respond to direction request
-                  if direction_command.include?(base_arr[0])
+                  if direction_command.include?(command_in)
                           
                           #get index of mark for origin and destiny 
                           a = base_arr.index("from")
@@ -49,14 +51,14 @@ class SmsrouterController < ApplicationController
                           #puts base_arr[a] +" "+ loca_1
                           #puts base_arr[b] +" "+ loca_2
                           {
-                            "type" => base_arr[0],
+                            "type" => command_in,
                             base_arr[a] => loca_1,
                             base_arr[b] => loca_2
                           }
                           #puts result.inspect
                           
                   #recognize and respond to weather request
-                  elsif weather_command.include?(base_arr[0])
+                  elsif weather_command.include?(command_in)
                     # check if the first word after command is prepsition
                     
                     if base_arr[1] =~ /at|of|in|to/
@@ -65,7 +67,7 @@ class SmsrouterController < ApplicationController
                       weather_query = base_arr[1..base_arr.length-1].join(" ")
                     end
                           
-                            {"type"	=> base_arr[0],
+                            {"type"	=> command_in,
                               "q" 	=> weather_query}
                   end
                   
