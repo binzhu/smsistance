@@ -4,8 +4,7 @@ class SmsrouterController < ApplicationController
   end
 
   def api
-    if request.post? || request.get?
-      
+    if request.post? && params[:code] == "deJIuvnj5OwDkGh65jXo"#check key to prevent fraud request
       from_number = params[:From]
       sms_in_body = params[:Body]
       #puts sms_in_body
@@ -42,7 +41,9 @@ class SmsrouterController < ApplicationController
             )
       sleep 1
       end
-    end#end post
+    else# I'm just kidding
+      return "Don't fraud please ^.^ "
+    end#end post/token check
   end
   
   def routesms(sms_in)

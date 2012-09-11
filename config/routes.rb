@@ -1,7 +1,7 @@
 Smsistance::Application.routes.draw do
   get "smsrouter/index"
   post "smsrouter/api"
-  get "smsrouter/api"
+  #get "smsrouter/api"
 
   # The priority is based upon order of creation:
   # first created -> highest priority.
