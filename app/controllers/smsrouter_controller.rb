@@ -160,15 +160,7 @@ class SmsrouterController < ApplicationController
     #final msg to send back
     "Current: "+ cur_desc + ", " + cur_temp +  ", Today: " + today_desc + ", " + today_low + "~" + today_high +  ", Tomorrow: " + tom_desc + ", " + tom_low + "~" + tom_high 
   end
-  
-  def sendmsg(msg)
-    if msg.length<=140
-      msg
-    else
-      msglist = []
-    end
-  end
-  
+
   #cut message without cutting the word
   def cutMsg(msg)
     if msg.length>160
@@ -178,7 +170,9 @@ class SmsrouterController < ApplicationController
     msg_cut = []
       for i in 0..msg_arr.count-1
         msg_single +=(msg_arr[i] + " ")
+        #cut message if longer than 160 char
         if msg_single.length>160
+          #starting to build each message
           msg_single = msg_single[0..msg_single.length-1-(msg_arr[i].length+1)] # if over 160, cut the last word out
           msg_cut.push msg_single
           puts msg_single.length 
