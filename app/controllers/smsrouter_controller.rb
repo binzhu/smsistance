@@ -4,8 +4,8 @@ class SmsrouterController < ApplicationController
   end
 
   def api
-    if request.post? 
-      @client = Twilio::REST::Client.new ENV['twilio_id'], ENV['twilio_token'] 
+    if request.post? || request.get?
+      
       from_number = params[:From]
       sms_in_body = params[:Body]
       #puts sms_in_body
@@ -13,9 +13,10 @@ class SmsrouterController < ApplicationController
       
       puts "debug info"
       puts sms_in_body
+      puts from_number
       puts routesms sms_in_body
       puts type
-      
+      @client = Twilio::REST::Client.new ENV['twilio_id'], ENV['twilio_token'] 
       if type == "direction"
         msgBack = google_direction(routesms(sms_in_body)["from"],routesms(sms_in_body)["to"])
       elsif type == "weather"
@@ -26,19 +27,22 @@ class SmsrouterController < ApplicationController
       end
       #@data = weatherMsg(routesms(sms_in_body)["q"])
       #puts msgBack
-      count = msgBack.length/160 
       
-          while count > 0 
+      #p msgBack
+      #p cutMsg(msgBack)
+      #p cutMsg(msgBack).count
+      #p cutMsg(msgBack).last.length
+      cuted_msg = cutMsg(msgBack)
+      
+      for i in 0..cuted_msg.length-1
             @client.account.sms.messages.create(
              :from => +13158951310,
-             :to => from_number,
-             :body => msgBack.first(160)
+             :to => +16502700918,
+             :body => cuted_msg[i]
             )
-            msgBack = msgBack[160, msgBack.length - 1]
-          
-          sleep 1
-          end
-    end
+      sleep 1
+      end
+    end#end post
   end
   
   def routesms(sms_in)
@@ -113,6 +117,7 @@ class SmsrouterController < ApplicationController
       response += leg["html_instructions"]
       response += (i<json_resp.count)? ", " : "." 
     end
+    #puts response
     response.gsub("<b>","").gsub("</b>","").gsub('<div style="font-size:0.9em">',' ').gsub("</div>","")
   end
   
@@ -149,6 +154,28 @@ class SmsrouterController < ApplicationController
       msg
     else
       msglist = []
+    end
+  end
+  
+  #cut message without cutting the word
+  def cutMsg(msg)
+    if msg.length>160
+    
+    msg_arr = msg.split(" ")
+    msg_single = ""
+    msg_cut = []
+      for i in 0..msg_arr.count-1
+        msg_single +=(msg_arr[i] + " ")
+        if msg_single.length>160
+          msg_single = msg_single[0..msg_single.length-1-(msg_arr[i].length+1)] # if over 160, cut the last word out
+          msg_cut.push msg_single
+          puts msg_single.length 
+          msg_single = msg_arr[i] + " " #start the next array element with the word just cut out
+        end
+      end
+      msg_cut.push(msg[msg_cut.join(" ").length-2..msg.length])
+    else
+      msg_cut = [msg]
     end
   end
 end
