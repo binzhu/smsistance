@@ -32,11 +32,17 @@ class SmsrouterController < ApplicationController
       #p cutMsg(msgBack).count
       #p cutMsg(msgBack).last.length
       cuted_msg = cutMsg(msgBack)
-      
+      if cuted_msg.length > 20
+            @client.account.sms.messages.create(
+             :from => +13158951310,
+             :to => from_number,
+             :body => "Your request returned more than 20 messages, "
+            )        
+      end
       for i in 0..cuted_msg.length-1
             @client.account.sms.messages.create(
              :from => +13158951310,
-             :to => +16502700918,
+             :to => from_number,
              :body => cuted_msg[i]
             )
       sleep 1
@@ -112,14 +118,19 @@ class SmsrouterController < ApplicationController
     response = ""
     
     json_resp = (JSON.parse(Typhoeus::Request.get(direction_uri).body))["routes"][0]["legs"][0]["steps"]
-    i = 0
-    json_resp.each do |leg|
-      i += 1
-      response += leg["html_instructions"]
-      response += (i<json_resp.count)? ", " : "." 
+    #check if distance is too long
+    if (JSON.parse(Typhoeus::Request.get(direction_uri).body))["routes"][0]["legs"][0]["distance"]["value"].to_i > 5000000
+      "You are either driving too far away or typed inaccurate origin/destination, please be more accurate in wording them. Sorry for inconvenience"
+    else
+      i = 0
+      json_resp.each do |leg|
+        i += 1
+        response += leg["html_instructions"]
+        response += (i<json_resp.count)? ", " : "." 
+      end
+      #puts response
+      response.gsub("<b>","").gsub("</b>","").gsub('<div style="font-size:0.9em">',' ').gsub("</div>","")      
     end
-    #puts response
-    response.gsub("<b>","").gsub("</b>","").gsub('<div style="font-size:0.9em">',' ').gsub("</div>","")
   end
   
   def weatherMsg(q)
